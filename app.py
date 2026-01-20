@@ -1,6 +1,7 @@
+from datetime import datetime
 from flask import Flask, render_template, request, flash, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
-from models import AdminUser
+from models import AdminUser, Equipment, Service
 from utils import hash_password, verify_password
 from db import db, basedir
 from dotenv import load_dotenv
@@ -74,3 +75,94 @@ def registration():
             db.session.commit()
     
     return redirect(url_for("login"))
+
+@app.route("/add_equipment", methods=["GET", "POST"])
+def add_equipment():
+    user = AdminUser.query.filter_by(id=session.get("user_id")).first()
+    if not user:
+        flash("Please log in!")
+        return redirect(url_for("login"))
+    
+    if request.method == "GET":
+        equipment_list = Equipment.query.filter_by(admin_user_id=user.id).all()
+        return render_template("add_equipment.html", equipment_list=equipment_list)
+    elif request.method == "POST":
+        code = request.form.get("code")
+        make = request.form.get("make")
+        model = request.form.get("model")
+        mileage = request.form.get("mileage")
+        service_date = request.form.get("service_date")
+        
+        try:
+            new_equipment = Equipment(
+                admin_user_id=user.id,
+                code=code,
+                make=make,
+                model=model,
+                mileage=int(mileage) if mileage else None,
+                service_date=datetime.strptime(service_date, "%Y-%m-%d") if service_date else None
+            )
+            db.session.add(new_equipment)
+            db.session.commit()
+            flash("Equipment added successfully!", "success")
+            return redirect(url_for("add_equipment"))
+        except Exception as e:
+            flash(f"Error adding equipment: {str(e)}", "error")
+            return redirect(url_for("add_equipment"))
+
+@app.route("/delete_equipment/<int:equipment_id>", methods=["POST"])
+def delete_equipment(equipment_id):
+    user = AdminUser.query.filter_by(id=session.get("user_id")).first()
+    if not user:
+        flash("Please log in!")
+        return redirect(url_for("login"))
+    
+    try:
+        equipment = Equipment.query.filter_by(id=equipment_id, admin_user_id=user.id).first()
+        if not equipment:
+            flash("Equipment not found!", "error")
+        else:
+            db.session.delete(equipment)
+            db.session.commit()
+            flash("Equipment deleted successfully!", "success")
+    except Exception as e:
+        flash(f"Error deleting equipment: {str(e)}", "error")
+    
+    return redirect(url_for("add_equipment"))
+
+@app.route("/new_service/<int:equipment_id>", methods=["GET", "POST"])
+def new_service(equipment_id):
+    user = AdminUser.query.filter_by(id=session.get("user_id")).first()
+    if not user:
+        flash("Please log in!")
+        return redirect(url_for("login"))
+    
+    equipment = Equipment.query.filter_by(id=equipment_id, admin_user_id=user.id).first()
+    if not equipment:
+        flash("Equipment not found!")
+        return redirect(url_for("add_equipment"))
+    
+    if request.method == "GET":
+        services = Service.query.filter_by(equipment_id=equipment_id).all()
+        return render_template("new_service.html", equipment=equipment, services=services)
+    elif request.method == "POST":
+        date = request.form.get("date")
+        performed_by = request.form.get("performed_by")
+        mileage = request.form.get("mileage")
+        next_service = request.form.get("next_service")
+        
+        try:
+            new_service_record = Service(
+                equipment_id=equipment_id,
+                date=datetime.strptime(date, "%Y-%m-%d").date() if date else None,
+                performed_by=performed_by,
+                mileage=int(mileage) if mileage else None,
+                next_service=datetime.strptime(next_service, "%Y-%m-%d").date() if next_service else None
+            )
+            db.session.add(new_service_record)
+            db.session.commit()
+            flash("Service recorded successfully!", "success")
+            return redirect(url_for("new_service", equipment_id=equipment_id))
+        except Exception as e:
+            flash(f"Error recording service: {str(e)}", "error")
+            return redirect(url_for("new_service", equipment_id=equipment_id))

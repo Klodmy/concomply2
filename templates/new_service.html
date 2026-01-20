@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Service Record</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .equipment-info {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Service Record - {{ equipment.code }}</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul>
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <div class="equipment-info">
+        <p><strong>Equipment Code:</strong> {{ equipment.code }}</p>
+        <p><strong>Make:</strong> {{ equipment.make }}</p>
+        <p><strong>Model:</strong> {{ equipment.model }}</p>
+        <p><strong>Current Mileage:</strong> {{ equipment.mileage if equipment.mileage else 'N/A' }}</p>
+    </div>
+
+    <h3>Record New Service</h3>
+    <form method="POST">
+        <div>
+            <label>Date</label><br>
+            <input type="date" name="date" required>
+        </div>
+
+        <div>
+            <label>Performed By</label><br>
+            <input type="text" name="performed_by" required>
+        </div>
+
+        <div>
+            <label>Mileage</label><br>
+            <input type="number" name="mileage">
+        </div>
+
+        <div>
+            <label>Next Service Date</label><br>
+            <input type="date" name="next_service">
+        </div>
+
+        <button type="submit">Record Service</button>
+    </form>
+
+    <h3>Previous Services</h3>
+    {% if services %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Performed By</th>
+                    <th>Mileage</th>
+                    <th>Next Service</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for service in services %}
+                    <tr>
+                        <td>{{ service.date }}</td>
+                        <td>{{ service.performed_by }}</td>
+                        <td>{{ service.mileage if service.mileage else 'N/A' }}</td>
+                        <td>{{ service.next_service if service.next_service else 'N/A' }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No previous services recorded.</p>
+    {% endif %}
+
+    <br>
+    <a href="{{ url_for('add_equipment') }}">Back to Equipment</a>
+</body>
+</html>

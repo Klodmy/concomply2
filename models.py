@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import DateTime
-from datetime import datetime
+from sqlalchemy import DateTime, ForeignKey, Date
+from datetime import datetime, date
 from db import db
 
 class AdminUser(db.Model):
@@ -9,3 +9,20 @@ class AdminUser(db.Model):
     password_hash: Mapped[str] = mapped_column(nullable=False)
     address: Mapped[str] = mapped_column(nullable=True)
     registration_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+
+class Equipment(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
+    admin_user_id: Mapped[int] = mapped_column(ForeignKey("admin_user.id"), nullable=False)
+    code: Mapped[str] = mapped_column(nullable=False)
+    make: Mapped[str] = mapped_column(nullable=False)
+    model: Mapped[str] = mapped_column(nullable=False)
+    mileage: Mapped[int] = mapped_column(nullable=True)
+    service_date: Mapped[date] = mapped_column(Date, nullable=True)
+
+class Service(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
+    equipment_id: Mapped[int] = mapped_column(ForeignKey("equipment.id"), nullable=False)
+    date: Mapped[date] = mapped_column(Date, nullable=False)
+    performed_by: Mapped[str] = mapped_column(nullable=False)
+    mileage: Mapped[int] = mapped_column(nullable=True)
+    next_service: Mapped[date] = mapped_column(Date, nullable=True)
