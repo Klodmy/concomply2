@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Quote Reader</title>
+</head>
+<body>
+    <h2>Quote Reader</h2>
+
+    <form method="POST" enctype="multipart/form-data">
+        <div>
+            <label>Upload PDF File</label><br>
+            <input type="file" name="pdf_file" accept=".pdf" required>
+        </div>
+
+        <button type="submit">Analyze Quote</button>
+    </form>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul>
+          {% for category, message in messages %}
+            <li class="{{ category }}">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    {% if summary %}
+        <div>
+            <h3>Summary</h3>
+            <p>{{ summary }}</p>
+        </div>
+    {% endif %}
+</body>
+</html>

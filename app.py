@@ -2,10 +2,12 @@ from datetime import datetime
 from flask import Flask, render_template, request, flash, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 from models import AdminUser, Equipment, Service
-from utils import hash_password, verify_password
+from utils import hash_password, verify_password, pdfs
 from db import db, basedir
 from dotenv import load_dotenv
+from openai import OpenAI
 import os
+import pdfplumber
 
 app = Flask(__name__)
 load_dotenv()
@@ -166,3 +168,39 @@ def new_service(equipment_id):
         except Exception as e:
             flash(f"Error recording service: {str(e)}", "error")
             return redirect(url_for("new_service", equipment_id=equipment_id))
+        
+
+
+@app.route("/quote_reader", methods=["GET", "POST"])
+def quote_reader():
+    user = AdminUser.query.filter_by(id=session.get("user_id")).first()
+    if not user:
+        flash("Please log in!")
+        return redirect(url_for("login"))
+    if request.method == "GET":
+        return render_template("quote_reader.html")
+    else:
+        api_key = os.environ.get("OPENAI_API_KEY")
+        openai_client = OpenAI(api_key=api_key)
+
+        pdf_file = request.files.get("pdf_file")
+        if not pdf_file:
+            flash("No file uploaded!", "error")
+            return redirect(url_for("quote_reader"))
+        try:
+            with pdfplumber.open(pdf_file) as pdf:
+                pdf_text = ""
+                for page in pdf.pages:
+                    pdf_text += page.extract_text() + "\n"
+            response = openai_client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "You are an assistant that provides quote breakdown by item if applicable, sumarizes information about company that provided they quote and company that received the quote. You also provide a brief summary of the overall quote."},
+                    {"role": "user", "content": f"provide quote breakdown including unit price for each item if applicable:\n{pdf_text}"}
+                ]
+            )
+            summary = response.choices[0].message.content
+        except(Exception):
+            flash(f"Error processing PDF")
+            return redirect(url_for("quote_reader"))
+    return render_template("quote_reader.html", summary=summary)
