@@ -6,6 +6,7 @@ from utils import hash_password, verify_password, pdfs
 from db import db, basedir
 from dotenv import load_dotenv
 from openai import OpenAI
+from json import dumps
 import os
 import pdfplumber
 
@@ -196,10 +197,10 @@ def quote_reader():
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": "You are an assistant that provides quote breakdown by item if applicable, sumarizes information about company that provided they quote and company that received the quote. You also provide a brief summary of the overall quote."},
-                    {"role": "user", "content": f"provide quote breakdown including unit price for each item if applicable:\n{pdf_text}"}
+                    {"role": "user", "content": f"return json file with only prices breakdown in format item_name, qty, unit_of_measurement, price_per_unit, item_price, subtotal, tax, total:\n{pdf_text}"}
                 ]
             )
-            summary = response.choices[0].message.content
+            summary = response.choices[0].message.content      
         except(Exception):
             flash(f"Error processing PDF")
             return redirect(url_for("quote_reader"))
