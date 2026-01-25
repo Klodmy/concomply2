@@ -9,7 +9,12 @@
 
     <p>You are now logged in.</p>
 
-    <a href="{{ url_for('logout') }}">Logout</a>
+    <h3>Navigation</h3>
+    <ul>
+        <li><a href="{{ url_for('add_equipment') }}">Manage Equipment</a></li>
+        <li><a href="{{ url_for('quote_reader') }}">Quote Reader</a></li>
+        <li><a href="{{ url_for('logout') }}">Logout</a></li>
+    </ul>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}

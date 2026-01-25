@@ -1,14 +1,15 @@
 from datetime import datetime
-from flask import Flask, render_template, request, flash, redirect, url_for, session
+from flask import Flask, render_template, request, flash, redirect, url_for, session, send_file
 from flask_sqlalchemy import SQLAlchemy
 from models import AdminUser, Equipment, Service
 from utils import hash_password, verify_password, pdfs
 from db import db, basedir
 from dotenv import load_dotenv
 from openai import OpenAI
-from json import dumps
+from json import dumps, loads
 import os
 import pdfplumber
+from openpyxl import Workbook, load_workbook
 
 app = Flask(__name__)
 load_dotenv()
@@ -16,7 +17,7 @@ app.secret_key = os.environ.get("SECRET_KEY")
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(basedir, "db.db")
 db.init_app(app)
 
-@app.route("/dashboard", methods=["GET", "POST"])
+@app.route("/", methods=["GET", "POST"])
 def dashboard():
     if request.method == "GET":
         try:
@@ -94,16 +95,23 @@ def add_equipment():
         make = request.form.get("make")
         model = request.form.get("model")
         mileage = request.form.get("mileage")
-        service_date = request.form.get("service_date")
+        equipment_type = request.form.get("type")
+        vin_number = request.form.get("vin_number")
+        service_required = request.form.get("service_required")
+        last_service_date = request.form.get("last_service_date")
+       
         
         try:
             new_equipment = Equipment(
                 admin_user_id=user.id,
+                type=equipment_type,
+                vin_number=vin_number,
                 code=code,
                 make=make,
                 model=model,
                 mileage=int(mileage) if mileage else None,
-                service_date=datetime.strptime(service_date, "%Y-%m-%d") if service_date else None
+                service_required=service_required,
+                last_service_date=datetime.strptime(last_service_date, "%Y-%m-%d").date() if last_service_date else None
             )
             db.session.add(new_equipment)
             db.session.commit()
@@ -189,19 +197,99 @@ def quote_reader():
             flash("No file uploaded!", "error")
             return redirect(url_for("quote_reader"))
         try:
+            # Convert PDF to markdown format optimized for LLMs
             with pdfplumber.open(pdf_file) as pdf:
-                pdf_text = ""
-                for page in pdf.pages:
-                    pdf_text += page.extract_text() + "\n"
+                markdown_content = "# PDF Document\n\n"
+                
+                for page_num, page in enumerate(pdf.pages, 1):
+                    markdown_content += f"## Page {page_num}\n\n"
+                    
+                    # Extract text with structure
+                    text = page.extract_text()
+                    if text:
+                        markdown_content += text + "\n\n"
+                    
+                    # Extract tables if present
+                    tables = page.extract_tables()
+                    if tables:
+                        for table_idx, table in enumerate(tables, 1):
+                            markdown_content += f"### Table {table_idx}\n\n"
+                            if table:
+                                # Create markdown table
+                                headers = table[0] if table else []
+                                markdown_content += "| " + " | ".join(str(h) if h else "" for h in headers) + " |\n"
+                                markdown_content += "|" + "|".join(["---" for _ in headers]) + "|\n"
+                                
+                                for row in table[1:]:
+                                    markdown_content += "| " + " | ".join(str(cell) if cell else "" for cell in row) + " |\n"
+                                markdown_content += "\n"
+            
+            # Send markdown to LLM for extraction
             response = openai_client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
-                    {"role": "system", "content": "You are an assistant that provides quote breakdown by item if applicable, sumarizes information about company that provided they quote and company that received the quote. You also provide a brief summary of the overall quote."},
-                    {"role": "user", "content": f"return json file with only prices breakdown in format item_name, qty, unit_of_measurement, price_per_unit, item_price, subtotal, tax, total:\n{pdf_text}"}
+                    {"role": "system", "content": "You are an assistant that extracts structured information from documents and provides responses in valid JSON format only. No markdown, no code blocks, only JSON."},
+                    {"role": "user", "content": f"Extract the following information from this quote document and return ONLY valid JSON:\n- company_name\n- company_address\n- contact_person\n- contact_cell\n- contact_email\n- quote_items (array with: quantity, units_of_measure, description, unit_price, total_price)\n- subtotal\n- tax_amount\n- total_amount\n\nDocument:\n{markdown_content}"}
                 ]
             )
-            summary = response.choices[0].message.content      
-        except(Exception):
-            flash(f"Error processing PDF")
+            response_text = response.choices[0].message.content.strip()
+            
+            # Remove markdown code blocks if present
+            if response_text.startswith("```json"):
+                response_text = response_text[7:]
+            if response_text.startswith("```"):
+                response_text = response_text[3:]
+            if response_text.endswith("```"):
+                response_text = response_text[:-3]
+            
+            response_text = response_text.strip()
+            print(f"DEBUG: Response text: {response_text}")  # Debug log
+            
+            summary = loads(response_text)
+        except ValueError as e:
+            print(f"DEBUG: JSON Parse Error - {str(e)}")
+            flash(f"Error parsing PDF response as JSON: {str(e)}", "error")
             return redirect(url_for("quote_reader"))
-    return render_template("quote_reader.html", summary=summary)
+        except Exception as e:
+            print(f"DEBUG: General Error - {str(e)}")
+            flash(f"Error processing PDF: {str(e)}", "error")
+            return redirect(url_for("quote_reader"))
+        
+        wb = load_workbook("C:\\Users\\IPAC\\Desktop\\FILES\\Scripts\\concomply2\\static\\IPAC_PO_Sub.xlsx", read_only=False, data_only=False)
+        ws = wb.active
+        
+        ws["C14"] = summary.get("company_name", "")
+        ws["C15"] = summary.get("company_address", "")
+        ws["I14"] = summary.get("contact_person", "")
+        ws["I15"] = summary.get("contact_cell", "")
+        ws["I16"] = summary.get("contact_email", "")
+        for idx, item in enumerate(summary.get("quote_items", []), start=0):
+            ws[f"A{19 + idx}"] = item.get("item_number", "")
+            ws[f"B{19 + idx}"] = item.get("units_of_measure", "")
+            ws[f"C{19 + idx}"] = item.get("description", "")
+            ws[f"I{19 + idx}"] = item.get("unit_price", "")
+            ws[f"J{19 + idx}"] = item.get("total_price", "")
+        ws["J40"] = summary.get("subtotal", "")
+        
+        
+        filename = f"{summary.get('company_name', 'Quote').replace('/', '_').replace('\\', '_')}.xlsx"
+        filepath = os.path.join("C:\\Users\\IPAC\\Desktop\\FILES\\Scripts\\concomply2\\static", filename)
+        wb.save(filepath)
+        
+        return render_template("quote_reader.html", summary=summary, filename=filename)
+
+    return render_template("quote_reader.html")
+
+@app.route("/download/<filename>")
+def download_file(filename):
+    user = AdminUser.query.filter_by(id=session.get("user_id")).first()
+    if not user:
+        flash("Please log in!")
+        return redirect(url_for("login"))
+    
+    try:
+        filepath = os.path.join("C:\\Users\\IPAC\\Desktop\\FILES\\Scripts\\concomply2\\static", filename)
+        return send_file(filepath, as_attachment=True)
+    except Exception as e:
+        flash(f"Error downloading file: {str(e)}", "error")
+        return redirect(url_for("quote_reader"))

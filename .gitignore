@@ -6,3 +6,4 @@ db.db
 instance/
 create_db.py
 .github
+test.py

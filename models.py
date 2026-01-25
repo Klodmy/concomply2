@@ -13,11 +13,14 @@ class AdminUser(db.Model):
 class Equipment(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
     admin_user_id: Mapped[int] = mapped_column(ForeignKey("admin_user.id"), nullable=False)
+    type: Mapped[str] = mapped_column(nullable=False)
+    vin_number: Mapped[str] = mapped_column(unique=True, nullable=False)
     code: Mapped[str] = mapped_column(nullable=False)
     make: Mapped[str] = mapped_column(nullable=False)
     model: Mapped[str] = mapped_column(nullable=False)
     mileage: Mapped[int] = mapped_column(nullable=True)
-    service_date: Mapped[date] = mapped_column(Date, nullable=True)
+    service_required: Mapped[str] = mapped_column(nullable=True)
+    last_service_date: Mapped[date] = mapped_column(Date, nullable=True)
 
 class Service(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
@@ -26,3 +29,32 @@ class Service(db.Model):
     performed_by: Mapped[str] = mapped_column(nullable=False)
     mileage: Mapped[int] = mapped_column(nullable=True)
     next_service: Mapped[date] = mapped_column(Date, nullable=True)
+    service_cost: Mapped[float] = mapped_column(nullable=True)
+    notes: Mapped[str] = mapped_column(nullable=True)
+
+class Service_records(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
+    service_id: Mapped[int] = mapped_column(ForeignKey("service.id"), nullable=False)
+    category: Mapped[str] = mapped_column(nullable=False)
+    issue_found: Mapped[str] = mapped_column(nullable=True)
+
+class Repair(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
+    equipment_id: Mapped[int] = mapped_column(ForeignKey("equipment.id"), nullable=False)
+    date: Mapped[date] = mapped_column(Date, nullable=False)
+    performed_by: Mapped[str] = mapped_column(nullable=False)
+    mileage: Mapped[int] = mapped_column(nullable=True)
+    repair_cost: Mapped[float] = mapped_column(nullable=True)
+    notes: Mapped[str] = mapped_column(nullable=True)
+
+class Repair_records(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
+    repair_id: Mapped[int] = mapped_column(ForeignKey("repair.id"), nullable=False)
+    category: Mapped[str] = mapped_column(nullable=False)
+    detail: Mapped[str] = mapped_column(nullable=True)
+    cost: Mapped[float] = mapped_column(nullable=True)
+    comments: Mapped[str] = mapped_column(nullable=True)
+
+
+
+

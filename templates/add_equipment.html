@@ -45,6 +45,16 @@
 
     <form method="POST">
         <div>
+            <label>Type</label><br>
+            <input type="text" name="type" required>
+        </div>
+
+        <div>
+            <label>VIN Number</label><br>
+            <input type="text" name="vin_number" required>
+        </div>
+
+        <div>
             <label>Code</label><br>
             <input type="text" name="code" required>
         </div>
@@ -65,8 +75,13 @@
         </div>
 
         <div>
-            <label>Service Date</label><br>
-            <input type="date" name="service_date">
+            <label>Service Required</label><br>
+            <input type="text" name="service_required">
+        </div>
+
+        <div>
+            <label>Last Service Date</label><br>
+            <input type="date" name="last_service_date">
         </div>
 
         <button type="submit">Add Equipment</button>
@@ -77,22 +92,28 @@
         <table>
             <thead>
                 <tr>
+                    <th>Type</th>
+                    <th>VIN Number</th>
                     <th>Code</th>
                     <th>Make</th>
                     <th>Model</th>
                     <th>Mileage</th>
-                    <th>Service Date</th>
+                    <th>Service Required</th>
+                    <th>Last Service Date</th>
                     <th>Action</th>
                 </tr>
             </thead>
             <tbody>
                 {% for equipment in equipment_list %}
                     <tr>
+                        <td>{{ equipment.type }}</td>
+                        <td>{{ equipment.vin_number }}</td>
                         <td>{{ equipment.code }}</td>
                         <td>{{ equipment.make }}</td>
                         <td>{{ equipment.model }}</td>
                         <td>{{ equipment.mileage if equipment.mileage else 'N/A' }}</td>
-                        <td>{{ equipment.service_date if equipment.service_date else 'N/A' }}</td>
+                        <td>{{ equipment.service_required if equipment.service_required else 'N/A' }}</td>
+                        <td>{{ equipment.last_service_date if equipment.last_service_date else 'N/A' }}</td>
                         <td>
                             <form method="POST" action="{{ url_for('delete_equipment', equipment_id=equipment.id) }}" style="display:inline;" onsubmit="return confirm('Are you sure?');">
                                 <button type="submit" class="delete-btn">Delete</button>

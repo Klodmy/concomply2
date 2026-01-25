@@ -30,6 +30,11 @@
         <div>
             <h3>Summary</h3>
             <p>{{ summary }}</p>
+            {% if filename %}
+                <a href="{{ url_for('download_file', filename=filename) }}" download>
+                    <button type="button">Download Excel File</button>
+                </a>
+            {% endif %}
         </div>
     {% endif %}
 </body>
