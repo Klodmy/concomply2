@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Audio Decoder</title>
+</head>
+<body>
+    <h2>Audio Decoder</h2>
+
+    <form method="POST" enctype="multipart/form-data">
+        <div>
+            <label>Upload MP4 or Audio File</label><br>
+            <input type="file" name="audio_file" accept=".mp4,.mp3,.wav,.m4a" required>
+        </div>
+
+        <button type="submit">Decode Audio</button>
+    </form>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul>
+          {% for category, message in messages %}
+            <li class="{{ category }}">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    {% if transcript %}
+        <div>
+            <h3>Transcript</h3>
+            <p>{{ transcript }}</p>
+            {% if text_filename %}
+                <a href="{{ url_for('download_file', filename=text_filename) }}" download>
+                    <button type="button">Download Text File</button>
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</body>
+</html>

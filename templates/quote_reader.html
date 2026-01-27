@@ -26,6 +26,13 @@
       {% endif %}
     {% endwith %}
 
+    {% if answer %}
+        <div>
+            <h3>Answer</h3>
+            <p>{{ answer }}</p>
+        </div>
+    {% endif %}
+
     {% if summary %}
         <div>
             <h3>Summary</h3>
