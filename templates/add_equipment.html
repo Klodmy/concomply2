@@ -108,7 +108,7 @@
                     <tr>
                         <td>{{ equipment.type }}</td>
                         <td>{{ equipment.vin_number }}</td>
-                        <td>{{ equipment.code }}</td>
+                        <td><a href="{{ url_for('new_service', equipment_id=equipment.id) }}">{{ equipment.code }}</a></td>
                         <td>{{ equipment.make }}</td>
                         <td>{{ equipment.model }}</td>
                         <td>{{ equipment.mileage if equipment.mileage else 'N/A' }}</td>

@@ -49,7 +49,7 @@ def login():
 
         if user and verify_password(password, user.password_hash):
             session["user_id"] = user.id
-            return redirect("/dashboard")
+            return redirect("/")
         else:
             flash("Wrong password!")
             return redirect(url_for("login"))
@@ -178,3 +178,5 @@ def new_service(equipment_id):
             flash(f"Error recording service: {str(e)}", "error")
             return redirect(url_for("new_service", equipment_id=equipment_id))
         
+
+    

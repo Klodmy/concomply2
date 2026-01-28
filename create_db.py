@@ -15,9 +15,6 @@ def create_database():
         
         print("✓ Database created successfully!")
         print("✓ Tables created:")
-        print("  - AdminUser (id, email, password_hash, address, registration_date)")
-        print("  - Equipment (id, admin_user_id, code, make, model, mileage, service_date)")
-        print("  - Service (id, equipment_id, date, performed_by, mileage, next_service)")
 
 if __name__ == "__main__":
     create_database()
