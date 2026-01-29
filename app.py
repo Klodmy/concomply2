@@ -178,5 +178,5 @@ def new_service(equipment_id):
             flash(f"Error recording service: {str(e)}", "error")
             return redirect(url_for("new_service", equipment_id=equipment_id))
         
-
+@app.route("/new_repair/<int:equipment_id>", methods=["GET", "POST"])
     
