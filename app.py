@@ -1,15 +1,13 @@
 from datetime import datetime
-from flask import Flask, render_template, request, flash, redirect, url_for, session, send_file
+from flask import Flask, render_template, request, flash, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
-from models import AdminUser, Equipment, Service
+from models import AdminUser, Equipment, Service, Service_records, Repair, Repair_records
 from utils import hash_password, verify_password, pdfs
 from db import db, basedir
 from dotenv import load_dotenv
 from openai import OpenAI
-from json import dumps, loads
 import os
 import pdfplumber
-from openpyxl import Workbook, load_workbook
 
 app = Flask(__name__)
 load_dotenv()
@@ -17,7 +15,7 @@ app.secret_key = os.environ.get("SECRET_KEY")
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(basedir, "db.db")
 db.init_app(app)
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/dashboard", methods=["GET", "POST"])
 def dashboard():
     if request.method == "GET":
         try:
@@ -49,7 +47,7 @@ def login():
 
         if user and verify_password(password, user.password_hash):
             session["user_id"] = user.id
-            return redirect("/")
+            return redirect("/dashboard")
         else:
             flash("Wrong password!")
             return redirect(url_for("login"))
@@ -92,26 +90,23 @@ def add_equipment():
         return render_template("add_equipment.html", equipment_list=equipment_list)
     elif request.method == "POST":
         code = request.form.get("code")
+        type = request.form.get("type")
+        vin_number = request.form.get("vin_number") 
         make = request.form.get("make")
         model = request.form.get("model")
         mileage = request.form.get("mileage")
-        equipment_type = request.form.get("type")
-        vin_number = request.form.get("vin_number")
-        service_required = request.form.get("service_required")
-        last_service_date = request.form.get("last_service_date")
-       
+        last_service_date = request.form.get("service_date")
         
         try:
             new_equipment = Equipment(
                 admin_user_id=user.id,
-                type=equipment_type,
+                type=type,
                 vin_number=vin_number,
                 code=code,
                 make=make,
                 model=model,
                 mileage=int(mileage) if mileage else None,
-                service_required=service_required,
-                last_service_date=datetime.strptime(last_service_date, "%Y-%m-%d").date() if last_service_date else None
+                last_service_date=datetime.strptime(last_service_date, "%Y-%m-%d") if last_service_date else None
             )
             db.session.add(new_equipment)
             db.session.commit()
@@ -176,7 +171,40 @@ def new_service(equipment_id):
             return redirect(url_for("new_service", equipment_id=equipment_id))
         except Exception as e:
             flash(f"Error recording service: {str(e)}", "error")
-            return redirect(url_for("new_service", equipment_id=equipment_id))
-        
+            return redirect(url_for("new_service", equipment_id=equipment_id))        
+
+
 @app.route("/new_repair/<int:equipment_id>", methods=["GET", "POST"])
-    
+def new_repair(eqipment_id):
+    user = AdminUser.query.filter_by(id=session.get("user_id")).first()
+    if not user:
+        flash("Please log in!")
+        return redirect(url_for("login"))
+    eqipment = Equipment.query.filter_by(id=eqipment_id, admin_user_id=user.id).first()
+    if not eqipment:
+        flash("Equipment was not found!")
+        return redirect(url_for("add_equipment"))
+    if request.method == "GET":
+        return render_template("new_repair.html")
+    else:
+        date = request.form.get("date")
+        performed_by = request.form.get("performed_by")
+        mileage = request.form.get("mileage")
+        repair_cost = request.form.get("repair_cost")
+        notes = request.form.get("notes")
+        try:
+            new_repair_record = Repair(
+                equipment_id=eqipment_id,
+                date=datetime.strptime(date, "%Y-%m-%d").date() if date else None,
+                performed_by=performed_by,
+                mileage=mileage,
+                repair_cost=repair_cost,
+                notes=notes
+            )
+            db.session.add(new_repair_record)
+            db.session.commit()
+        except Exception as e:
+            flash(f"Error: {e}")
+            return redirect(url_for("new_repair", eqipment_id=eqipment_id))
+        flash("Repair recorded successfully!")
+        return redirect(url_for("new_repair", eqipment_id=eqipment_id))
