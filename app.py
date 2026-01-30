@@ -175,17 +175,18 @@ def new_service(equipment_id):
 
 
 @app.route("/new_repair/<int:equipment_id>", methods=["GET", "POST"])
-def new_repair(eqipment_id):
+def new_repair(equipment_id):
     user = AdminUser.query.filter_by(id=session.get("user_id")).first()
     if not user:
         flash("Please log in!")
         return redirect(url_for("login"))
-    eqipment = Equipment.query.filter_by(id=eqipment_id, admin_user_id=user.id).first()
-    if not eqipment:
+    equipment = Equipment.query.filter_by(id=equipment_id, admin_user_id=user.id).first()
+    if not equipment:
         flash("Equipment was not found!")
         return redirect(url_for("add_equipment"))
     if request.method == "GET":
-        return render_template("new_repair.html")
+        repairs = Repair.query.filter_by(equipment_id=equipment_id)
+        return render_template("new_repair.html", equipment=equipment, repairs=repairs)
     else:
         date = request.form.get("date")
         performed_by = request.form.get("performed_by")
@@ -194,7 +195,7 @@ def new_repair(eqipment_id):
         notes = request.form.get("notes")
         try:
             new_repair_record = Repair(
-                equipment_id=eqipment_id,
+                equipment_id=equipment_id,
                 date=datetime.strptime(date, "%Y-%m-%d").date() if date else None,
                 performed_by=performed_by,
                 mileage=mileage,
@@ -205,6 +206,10 @@ def new_repair(eqipment_id):
             db.session.commit()
         except Exception as e:
             flash(f"Error: {e}")
-            return redirect(url_for("new_repair", eqipment_id=eqipment_id))
+            return redirect(url_for("new_repair", equipment_id=equipment_id))
         flash("Repair recorded successfully!")
-        return redirect(url_for("new_repair", eqipment_id=eqipment_id))
+        return redirect(url_for("new_repair", equipment_id=equipment_id))
+    
+
+
+### Add functionality to get a report on equipment/repairs/services/by date

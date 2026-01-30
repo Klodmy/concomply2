@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Repair Record</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .equipment-info {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Repair Record - {{ equipment.code }}</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul>
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <div class="equipment-info">
+        <p><strong>Equipment Code:</strong> {{ equipment.code }}</p>
+        <p><strong>Make:</strong> {{ equipment.make }}</p>
+        <p><strong>Model:</strong> {{ equipment.model }}</p>
+        <p><strong>Current Mileage:</strong> {{ equipment.mileage if equipment.mileage else 'N/A' }}</p>
+    </div>
+
+    <h3>Record New repair</h3>
+    <form method="POST">
+        <div>
+            <label>Date</label><br>
+            <input type="date" name="date" required>
+        </div>
+
+        <div>
+            <label>Performed By</label><br>
+            <input type="text" name="performed_by" required>
+        </div>
+
+        <div>
+            <label>Mileage</label><br>
+            <input type="number" name="mileage">
+        </div>
+
+        <div>
+            <label>Cost</label><br>
+            <input type="text" name="cost">
+        </div>
+
+        <div>
+            <label>Notes</label><br>
+            <input type="textarea" name="notes">
+        </div>
+
+        <button type="submit">Record repair</button>
+    </form>
+
+    <h3>Previous Repairs</h3>
+    {% if repairs %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Performed By</th>
+                    <th>Mileage</th>
+                    <th>Cost</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for repair in repairs %}
+                    <tr>
+                        <td>{{ repair.date }}</td>
+                        <td>{{ repair.performed_by }}</td>
+                        <td>{{ repair.mileage if repair.mileage else 'N/A' }}</td>
+                        <td>{{ repair.cost }}</td>
+                        <td>{{ repair.notes }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No previous repairs recorded.</p>
+    {% endif %}
+
+    <br>
+    <a href="{{ url_for('add_equipment') }}">Back to Equipment</a>
+</body>
+</html>
