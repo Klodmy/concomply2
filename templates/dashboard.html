@@ -1,28 +1,43 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Dashboard</title>
-</head>
-<body>
-    <h2>Welcome, {{ user.email }}!</h2>
+{% extends "base.html" %}
+{% block title %}Dashboard · ConComply{% endblock %}
+{% block content %}
+<section class="hero" data-reveal>
+    <div>
+        <h1>Welcome back, {{ user.email }}.</h1>
+        <p>Keep your fleet healthy with quick service logging, repair tracking, and downloadable reports.</p>
+        <div class="hero-actions">
+            <a class="button primary" href="{{ url_for('add_equipment') }}">Manage Equipment</a>
+            <a class="button ghost" href="{{ url_for('registration') }}">Add Another Admin</a>
+        </div>
+    </div>
+    <div class="hero-panel" data-reveal>
+        <div class="stat-card">
+            <div class="stat-label">Equipment</div>
+            <div class="stat-value">{{ equipment_count }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Services Logged</div>
+            <div class="stat-value">{{ service_count }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Repairs Logged</div>
+            <div class="stat-value">{{ repair_count }}</div>
+        </div>
+    </div>
+</section>
 
-    <p>You are now logged in.</p>
-
-    <h3>Navigation</h3>
-    <ul>
-        <li><a href="{{ url_for('add_equipment') }}">Manage Equipment</a></li>
-        <li><a href="{{ url_for('logout') }}">Logout</a></li>
-    </ul>
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <ul>
-          {% for category, message in messages %}
-            <li class="{{ category }}">{{ message }}</li>
-          {% endfor %}
-        </ul>
-      {% endif %}
-    {% endwith %}
-</body>
-</html>
+<section class="card-grid">
+    <div class="card" data-reveal>
+        <h3>Stay Ahead of Service</h3>
+        <p>Track scheduled services, upcoming milestones, and latest mileage for every asset.</p>
+    </div>
+    <div class="card" data-reveal>
+        <h3>Repair Cost Clarity</h3>
+        <p>Log repair work with cost details and notes so you can spot repeat issues early.</p>
+    </div>
+    <div class="card" data-reveal>
+        <h3>Export On Demand</h3>
+        <p>Download CSV reports per equipment for sharing with accounting, insurance, or project leads.</p>
+    </div>
+</section>
+{% endblock %}

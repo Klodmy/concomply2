@@ -1,38 +1,29 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Register</title>
-</head>
-<body>
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <ul>
-                {% for category, message in messages %}
-                    <li class="{{ category }}">{{ message }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-    {% endwith %}
-    <h2>Register</h2>
+{% extends "base.html" %}
+{% block title %}Register · ConComply{% endblock %}
+{% block content %}
+<section class="centered">
+    <div class="panel" data-reveal>
+        <h2>Create your admin account</h2>
+        <p class="muted">Use a work email so your team can find you easily.</p>
+        <form method="POST" class="form">
+            <label>
+                Email
+                <input type="email" name="email" required>
+            </label>
 
-    <form method="POST">
-        <div>
-            <label>Email</label><br>
-            <input type="email" name="email" required>
-        </div>
+            <label>
+                Password
+                <input type="password" name="password" required>
+            </label>
 
-        <div>
-            <label>Password</label><br>
-            <input type="password" name="password" required>
-        </div>
+            <label>
+                Confirm Password
+                <input type="password" name="confirm_password" required>
+            </label>
 
-        <div>
-            <label>Confirm Password</label><br>
-            <input type="password" name="confirm_password" required>
-        </div>
-
-        <button type="submit">Register</button>
-    </form>
-</body>
-</html>
+            <button type="submit" class="button primary full">Register</button>
+        </form>
+        <p class="helper">Already have an account? <a href="{{ url_for('login') }}">Log in</a>.</p>
+    </div>
+</section>
+{% endblock %}

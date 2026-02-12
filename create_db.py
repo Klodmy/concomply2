@@ -1,5 +1,5 @@
 from app import app, db
-from models import AdminUser, Equipment, Service
+from models import AdminUser, Equipment, Service, Repair
 import os
 
 # Ensure instance directory exists

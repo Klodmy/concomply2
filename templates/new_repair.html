@@ -1,13 +1,13 @@
 {% extends "base.html" %}
-{% block title %}Service · {{ equipment.code }}{% endblock %}
+{% block title %}Repair · {{ equipment.code }}{% endblock %}
 {% block content %}
 <section class="detail-header" data-reveal>
     <div>
-        <h2>Service log · {{ equipment.code }}</h2>
+        <h2>Repair log · {{ equipment.code }}</h2>
         <p class="muted">{{ equipment.make }} {{ equipment.model }} · {{ equipment.type }}</p>
     </div>
     <div class="detail-actions">
-        <a class="button ghost" href="{{ url_for('new_repair', equipment_id=equipment.id) }}">Log Repair</a>
+        <a class="button ghost" href="{{ url_for('new_service', equipment_id=equipment.id) }}">Log Service</a>
         <a class="button ghost" href="{{ url_for('equipment_report', equipment_id=equipment.id) }}">Download CSV</a>
         <a class="button ghost" href="{{ url_for('add_equipment') }}">Back to Equipment</a>
     </div>
@@ -15,10 +15,10 @@
 
 <section class="split">
     <div class="panel" data-reveal>
-        <h3>Record new service</h3>
+        <h3>Record new repair</h3>
         <form method="POST" class="form">
             <label>
-                Service Date
+                Repair Date
                 <input type="date" name="date" required>
             </label>
 
@@ -33,33 +33,28 @@
             </label>
 
             <label>
-                Next Service Date
-                <input type="date" name="next_service">
-            </label>
-
-            <label>
-                Service Cost
-                <input type="number" name="service_cost" min="0" step="0.01">
+                Repair Cost
+                <input type="number" name="repair_cost" min="0" step="0.01">
             </label>
 
             <label>
                 Notes
-                <textarea name="notes" rows="3" placeholder="Optional notes..."></textarea>
+                <textarea name="notes" rows="3" placeholder="Describe the issue, parts, or downtime."></textarea>
             </label>
 
-            <button type="submit" class="button primary full">Record Service</button>
+            <button type="submit" class="button primary full">Record Repair</button>
         </form>
     </div>
 
     <div class="panel wide" data-reveal>
         <div class="panel-header">
             <div>
-                <h3>Service history</h3>
+                <h3>Repair history</h3>
                 <p class="muted">Latest mileage: {{ equipment.mileage if equipment.mileage else 'N/A' }}</p>
             </div>
         </div>
 
-        {% if services %}
+        {% if repairs %}
             <div class="table-wrap">
                 <table>
                     <thead>
@@ -67,20 +62,18 @@
                             <th>Date</th>
                             <th>Performed By</th>
                             <th>Mileage</th>
-                            <th>Next Service</th>
                             <th>Cost</th>
                             <th>Notes</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for service in services %}
+                        {% for repair in repairs %}
                             <tr>
-                                <td>{{ service.date }}</td>
-                                <td>{{ service.performed_by }}</td>
-                                <td>{{ service.mileage if service.mileage else 'N/A' }}</td>
-                                <td>{{ service.next_service if service.next_service else 'N/A' }}</td>
-                                <td>{{ "$%.2f"|format(service.service_cost) if service.service_cost else 'N/A' }}</td>
-                                <td>{{ service.notes if service.notes else '—' }}</td>
+                                <td>{{ repair.date }}</td>
+                                <td>{{ repair.performed_by }}</td>
+                                <td>{{ repair.mileage if repair.mileage else 'N/A' }}</td>
+                                <td>{{ "$%.2f"|format(repair.repair_cost) if repair.repair_cost else 'N/A' }}</td>
+                                <td>{{ repair.notes if repair.notes else '—' }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -88,8 +81,8 @@
             </div>
         {% else %}
             <div class="empty-state">
-                <h3>No service history yet</h3>
-                <p>Record the first service to start tracking intervals and costs.</p>
+                <h3>No repair history yet</h3>
+                <p>Log the first repair to track costs and downtime.</p>
             </div>
         {% endif %}
     </div>

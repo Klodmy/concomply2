@@ -1,34 +1,24 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Login</title>
-</head>
-<body>
-    <h2>Login</h2>
+{% extends "base.html" %}
+{% block title %}Login · ConComply{% endblock %}
+{% block content %}
+<section class="centered">
+    <div class="panel" data-reveal>
+        <h2>Log in to ConComply</h2>
+        <p class="muted">Keep your maintenance operations organized in one place.</p>
+        <form method="POST" class="form">
+            <label>
+                Email
+                <input type="email" name="email" required>
+            </label>
 
-    <form method="POST">
-        <div>
-            <label>Email</label><br>
-            <input type="email" name="email" required>
-        </div>
+            <label>
+                Password
+                <input type="password" name="password" required>
+            </label>
 
-        <div>
-            <label>Password</label><br>
-            <input type="password" name="password" required>
-        </div>
-
-        <button type="submit">Login</button>
-    </form>
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <ul>
-          {% for category, message in messages %}
-            <li class="{{ category }}">{{ message }}</li>
-          {% endfor %}
-        </ul>
-      {% endif %}
-    {% endwith %}
-</body>
-</html>
+            <button type="submit" class="button primary full">Login</button>
+        </form>
+        <p class="helper">New here? <a href="{{ url_for('registration') }}">Create an account</a>.</p>
+    </div>
+</section>
+{% endblock %}

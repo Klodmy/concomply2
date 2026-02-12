@@ -1,130 +1,126 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Add Equipment</title>
-    <style>
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-top: 20px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        .delete-btn {
-            background-color: #f44336;
-            color: white;
-            padding: 5px 10px;
-            border: none;
-            cursor: pointer;
-            border-radius: 3px;
-        }
-        .delete-btn:hover {
-            background-color: #da190b;
-        }
-    </style>
-</head>
-<body>
-    <h2>Add Equipment</h2>
+{% extends "base.html" %}
+{% block title %}Equipment · ConComply{% endblock %}
+{% block content %}
+<section class="split">
+    <div class="panel" data-reveal>
+        <h2>Add equipment</h2>
+        <p class="muted">Log every asset so service and repair records stay accurate.</p>
+        <form method="POST" class="form">
+            <label>
+                Type
+                <input type="text" name="type" required>
+            </label>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <ul>
-                {% for category, message in messages %}
-                    <li class="{{ category }}">{{ message }}</li>
-                {% endfor %}
-            </ul>
+            <label>
+                VIN Number
+                <input type="text" name="vin_number" required>
+            </label>
+
+            <label>
+                Code
+                <input type="text" name="code" required>
+            </label>
+
+            <label>
+                Make
+                <input type="text" name="make" required>
+            </label>
+
+            <label>
+                Model
+                <input type="text" name="model" required>
+            </label>
+
+            <label>
+                Mileage
+                <input type="number" name="mileage" min="0">
+            </label>
+
+            <label>
+                Service Required
+                <input type="text" name="service_required" placeholder="E.g. 500-hour check">
+            </label>
+
+            <label>
+                Last Service Date
+                <input type="date" name="last_service_date">
+            </label>
+
+            <button type="submit" class="button primary full">Add Equipment</button>
+        </form>
+    </div>
+
+    <div class="panel wide" data-reveal>
+        <div class="panel-header">
+            <div>
+                <h2>Equipment list</h2>
+                <p class="muted">Search, filter, or export reports.</p>
+            </div>
+            <form method="GET" class="filters">
+                <input type="text" name="search" placeholder="Search code, VIN, make..." value="{{ search }}">
+                <select name="type">
+                    <option value="">All types</option>
+                    {% for type in equipment_types %}
+                        <option value="{{ type }}" {% if equipment_type == type %}selected{% endif %}>{{ type }}</option>
+                    {% endfor %}
+                </select>
+                <select name="sort">
+                    <option value="type" {% if sort == "type" %}selected{% endif %}>Sort by Type</option>
+                    <option value="code" {% if sort == "code" %}selected{% endif %}>Sort by Code</option>
+                    <option value="make" {% if sort == "make" %}selected{% endif %}>Sort by Make</option>
+                </select>
+                <button class="button ghost" type="submit">Apply</button>
+            </form>
+        </div>
+
+        {% if equipment_list %}
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Code</th>
+                            <th>Make / Model</th>
+                            <th>VIN</th>
+                            <th>Mileage</th>
+                            <th>Last Service</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for equipment in equipment_list %}
+                            <tr>
+                                <td>{{ equipment.type }}</td>
+                                <td>
+                                    <div class="cell-strong">{{ equipment.code }}</div>
+                                    <div class="cell-muted">{{ equipment.service_required if equipment.service_required else 'No service interval' }}</div>
+                                </td>
+                                <td>
+                                    <div class="cell-strong">{{ equipment.make }}</div>
+                                    <div class="cell-muted">{{ equipment.model }}</div>
+                                </td>
+                                <td>{{ equipment.vin_number }}</td>
+                                <td>{{ equipment.mileage if equipment.mileage else 'N/A' }}</td>
+                                <td>{{ equipment.last_service_date if equipment.last_service_date else 'N/A' }}</td>
+                                <td class="actions">
+                                    <a class="button ghost" href="{{ url_for('new_service', equipment_id=equipment.id) }}">Service</a>
+                                    <a class="button ghost" href="{{ url_for('new_repair', equipment_id=equipment.id) }}">Repair</a>
+                                    <a class="button ghost" href="{{ url_for('equipment_report', equipment_id=equipment.id) }}">CSV</a>
+                                    <form method="POST" action="{{ url_for('delete_equipment', equipment_id=equipment.id) }}" onsubmit="return confirm('Are you sure?');">
+                                        <button type="submit" class="button danger">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <h3>No equipment yet</h3>
+                <p>Start by adding your first asset to unlock service and repair tracking.</p>
+            </div>
         {% endif %}
-    {% endwith %}
-
-    <form method="POST">
-        <div>
-            <label>Type</label><br>
-            <input type="text" name="type" required>
-        </div>
-
-        <div>
-            <label>VIN Number</label><br>
-            <input type="text" name="vin_number" required>
-        </div>
-
-        <div>
-            <label>Code</label><br>
-            <input type="text" name="code" required>
-        </div>
-
-        <div>
-            <label>Make</label><br>
-            <input type="text" name="make" required>
-        </div>
-
-        <div>
-            <label>Model</label><br>
-            <input type="text" name="model" required>
-        </div>
-
-        <div>
-            <label>Mileage</label><br>
-            <input type="number" name="mileage">
-        </div>
-
-        <div>
-            <label>Service Required</label><br>
-            <input type="text" name="service_required">
-        </div>
-
-        <div>
-            <label>Last Service Date</label><br>
-            <input type="date" name="last_service_date">
-        </div>
-
-        <button type="submit">Add Equipment</button>
-    </form>
-
-    <h3>Existing Equipment</h3>
-    {% if equipment_list %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Type</th>
-                    <th>VIN Number</th>
-                    <th>Code</th>
-                    <th>Make</th>
-                    <th>Model</th>
-                    <th>Mileage</th>
-                    <th>Service Required</th>
-                    <th>Last Service Date</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for equipment in equipment_list %}
-                    <tr>
-                        <td>{{ equipment.type }}</td>
-                        <td>{{ equipment.vin_number }}</td>
-                        <td><a href="{{ url_for('new_service', equipment_id=equipment.id) }}">{{ equipment.code }}</a></td>
-                        <td>{{ equipment.make }}</td>
-                        <td>{{ equipment.model }}</td>
-                        <td>{{ equipment.mileage if equipment.mileage else 'N/A' }}</td>
-                        <td>{{ equipment.service_required if equipment.service_required else 'N/A' }}</td>
-                        <td>{{ equipment.last_service_date if equipment.last_service_date else 'N/A' }}</td>
-                        <td>
-                            <form method="POST" action="{{ url_for('delete_equipment', equipment_id=equipment.id) }}" style="display:inline;" onsubmit="return confirm('Are you sure?');">
-                                <button type="submit" class="delete-btn">Delete</button>
-                            </form>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>No equipment added yet.</p>
-    {% endif %}
-</body>
-</html>
+    </div>
+</section>
+{% endblock %}
