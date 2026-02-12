@@ -4,10 +4,13 @@
 <section class="hero" data-reveal>
     <div>
         <h1>Welcome back, {{ user.email }}.</h1>
+        <p class="muted">Role: {{ user.role|capitalize }}</p>
         <p>Keep your fleet healthy with quick service logging, repair tracking, and downloadable reports.</p>
         <div class="hero-actions">
             <a class="button primary" href="{{ url_for('add_equipment') }}">Manage Equipment</a>
-            <a class="button ghost" href="{{ url_for('registration') }}">Add Another Admin</a>
+            {% if user.role == "admin" %}
+                <a class="button ghost" href="{{ url_for('team') }}">Manage Team</a>
+            {% endif %}
         </div>
     </div>
     <div class="hero-panel" data-reveal>

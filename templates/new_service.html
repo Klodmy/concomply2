@@ -1,10 +1,10 @@
-{% extends "base.html" %}
-{% block title %}Service · {{ equipment.code }}{% endblock %}
+﻿{% extends "base.html" %}
+{% block title %}Service - {{ equipment.code }}{% endblock %}
 {% block content %}
 <section class="detail-header" data-reveal>
     <div>
-        <h2>Service log · {{ equipment.code }}</h2>
-        <p class="muted">{{ equipment.make }} {{ equipment.model }} · {{ equipment.type }}</p>
+        <h2>Service log - {{ equipment.code }}</h2>
+        <p class="muted">{{ equipment.make }} {{ equipment.model }} - {{ equipment.type }}</p>
     </div>
     <div class="detail-actions">
         <a class="button ghost" href="{{ url_for('new_repair', equipment_id=equipment.id) }}">Log Repair</a>
@@ -16,7 +16,8 @@
 <section class="split">
     <div class="panel" data-reveal>
         <h3>Record new service</h3>
-        <form method="POST" class="form">
+        <form method="POST" class="form" enctype="multipart/form-data" data-cost-form>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <label>
                 Service Date
                 <input type="date" name="date" required>
@@ -37,18 +38,45 @@
                 <input type="date" name="next_service">
             </label>
 
-            <label>
-                Service Cost
-                <input type="number" name="service_cost" min="0" step="0.01">
-            </label>
+            <div class="cost-items" data-cost-items>
+                <div class="cost-header">
+                    <span>Cost items</span>
+                    <button type="button" class="button ghost" data-add-item>Add item</button>
+                </div>
+                <div class="cost-row" data-cost-row>
+                    <input type="text" name="cost_item_desc" placeholder="Item description">
+                    <input type="number" name="cost_item_amount" min="0" step="0.01" placeholder="Amount">
+                    <button type="button" class="button danger" data-remove-item>Remove</button>
+                </div>
+            </div>
 
             <label>
                 Notes
                 <textarea name="notes" rows="3" placeholder="Optional notes..."></textarea>
             </label>
 
+            <label>
+                Attachments
+                <input type="file" name="attachments" multiple accept=".pdf,.png,.jpg,.jpeg,.gif,.doc,.docx,.xls,.xlsx,.txt">
+            </label>
+
             <button type="submit" class="button primary full">Record Service</button>
         </form>
+
+        {% if recent_checkins %}
+            <div class="panel" data-reveal>
+                <h4>Recent check-ins</h4>
+                <div class="checkin-list">
+                    {% for checkin in recent_checkins %}
+                        <div class="checkin-item">
+                            <div class="cell-strong">{{ checkin.created_at.date() }}</div>
+                            <div class="cell-muted">Mileage: {{ checkin.mileage if checkin.mileage else 'N/A' }}</div>
+                            <div class="cell-muted">{{ checkin.issues if checkin.issues else 'No issues reported' }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
     </div>
 
     <div class="panel wide" data-reveal>
@@ -68,7 +96,9 @@
                             <th>Performed By</th>
                             <th>Mileage</th>
                             <th>Next Service</th>
-                            <th>Cost</th>
+                            <th>Total</th>
+                            <th>Cost Items</th>
+                            <th>Attachments</th>
                             <th>Notes</th>
                         </tr>
                     </thead>
@@ -80,7 +110,38 @@
                                 <td>{{ service.mileage if service.mileage else 'N/A' }}</td>
                                 <td>{{ service.next_service if service.next_service else 'N/A' }}</td>
                                 <td>{{ "$%.2f"|format(service.service_cost) if service.service_cost else 'N/A' }}</td>
-                                <td>{{ service.notes if service.notes else '—' }}</td>
+                                <td>
+                                    {% set items = cost_items_by_service.get(service.id, []) %}
+                                    {% if items %}
+                                        {% for item in items %}
+                                            <div>{{ item.description }} - {{ "$%.2f"|format(item.amount) }}</div>
+                                        {% endfor %}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% set attachments = attachments_by_service.get(service.id, []) %}
+                                    {% if attachments %}
+                                        {% for attachment in attachments %}
+                                            <div class="attachment-row">
+                                                {% set lower_name = attachment.original_name.lower() %}
+                                                {% if lower_name.endswith('.png') or lower_name.endswith('.jpg') or lower_name.endswith('.jpeg') or lower_name.endswith('.gif') %}
+                                                    <a class="attachment-thumb" href="{{ url_for('view_service_attachment', attachment_id=attachment.id) }}">
+                                                        <img src="{{ url_for('view_service_attachment', attachment_id=attachment.id) }}" alt="{{ attachment.original_name }}">
+                                                    </a>
+                                                {% endif %}
+                                                <div>
+                                                    <a href="{{ url_for('download_service_attachment', attachment_id=attachment.id) }}">{{ attachment.original_name }}</a>
+                                                    <div class="cell-muted">{{ attachment.uploaded_at.date() }}</div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <td>{{ service.notes if service.notes else '--' }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>

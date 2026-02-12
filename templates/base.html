@@ -18,9 +18,13 @@
             </div>
         </div>
         <nav class="site-nav">
+            <a href="{{ url_for('index') }}">Home</a>
             {% if session.get("user_id") %}
                 <a href="{{ url_for('dashboard') }}">Dashboard</a>
                 <a href="{{ url_for('add_equipment') }}">Equipment</a>
+                {% if current_user and current_user.role == "admin" %}
+                    <a href="{{ url_for('team') }}">Team</a>
+                {% endif %}
                 <a class="button" href="{{ url_for('logout') }}">Logout</a>
             {% else %}
                 <a href="{{ url_for('login') }}">Login</a>

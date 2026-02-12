@@ -1,53 +1,61 @@
-{% extends "base.html" %}
-{% block title %}Equipment · ConComply{% endblock %}
+﻿{% extends "base.html" %}
+{% block title %}Equipment - ConComply{% endblock %}
 {% block content %}
 <section class="split">
     <div class="panel" data-reveal>
         <h2>Add equipment</h2>
         <p class="muted">Log every asset so service and repair records stay accurate.</p>
-        <form method="POST" class="form">
-            <label>
-                Type
-                <input type="text" name="type" required>
-            </label>
+        {% if current_user and current_user.role == "admin" %}
+            <form method="POST" class="form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <label>
+                    Type
+                    <input type="text" name="type" required>
+                </label>
 
-            <label>
-                VIN Number
-                <input type="text" name="vin_number" required>
-            </label>
+                <label>
+                    VIN Number
+                    <input type="text" name="vin_number" required>
+                </label>
 
-            <label>
-                Code
-                <input type="text" name="code" required>
-            </label>
+                <label>
+                    Code
+                    <input type="text" name="code" required>
+                </label>
 
-            <label>
-                Make
-                <input type="text" name="make" required>
-            </label>
+                <label>
+                    Make
+                    <input type="text" name="make" required>
+                </label>
 
-            <label>
-                Model
-                <input type="text" name="model" required>
-            </label>
+                <label>
+                    Model
+                    <input type="text" name="model" required>
+                </label>
 
-            <label>
-                Mileage
-                <input type="number" name="mileage" min="0">
-            </label>
+                <label>
+                    Mileage
+                    <input type="number" name="mileage" min="0">
+                </label>
 
-            <label>
-                Service Required
-                <input type="text" name="service_required" placeholder="E.g. 500-hour check">
-            </label>
+                <label>
+                    Service Required
+                    <input type="text" name="service_required" placeholder="E.g. 500-hour check">
+                </label>
 
-            <label>
-                Last Service Date
-                <input type="date" name="last_service_date">
-            </label>
+                <label>
+                    Last Service Date
+                    <input type="date" name="last_service_date">
+                </label>
 
-            <button type="submit" class="button primary full">Add Equipment</button>
-        </form>
+                <button type="submit" class="button primary full">Add Equipment</button>
+            </form>
+        {% else %}
+            <div class="empty-state">
+                <h3>Admin access required</h3>
+                <p>Contact an admin to add or edit equipment.</p>
+            </div>
+        {% endif %}
     </div>
 
     <div class="panel wide" data-reveal>
@@ -106,9 +114,14 @@
                                     <a class="button ghost" href="{{ url_for('new_service', equipment_id=equipment.id) }}">Service</a>
                                     <a class="button ghost" href="{{ url_for('new_repair', equipment_id=equipment.id) }}">Repair</a>
                                     <a class="button ghost" href="{{ url_for('equipment_report', equipment_id=equipment.id) }}">CSV</a>
-                                    <form method="POST" action="{{ url_for('delete_equipment', equipment_id=equipment.id) }}" onsubmit="return confirm('Are you sure?');">
-                                        <button type="submit" class="button danger">Delete</button>
-                                    </form>
+                                    <a class="button ghost" href="{{ url_for('equipment_qr', equipment_id=equipment.id) }}">QR</a>
+                                    <a class="button ghost" href="{{ url_for('equipment_checkins', equipment_id=equipment.id) }}">Check-ins</a>
+                                    {% if current_user and current_user.role == "admin" %}
+                                        <form method="POST" action="{{ url_for('delete_equipment', equipment_id=equipment.id) }}" onsubmit="return confirm('Are you sure?');">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                            <button type="submit" class="button danger">Delete</button>
+                                        </form>
+                                    {% endif %}
                                 </td>
                             </tr>
                         {% endfor %}

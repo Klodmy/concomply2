@@ -1,5 +1,16 @@
 from app import app, db
-from models import AdminUser, Equipment, Service, Repair
+from models import (
+    AdminUser,
+    Equipment,
+    Service,
+    Repair,
+    ServiceAttachment,
+    RepairAttachment,
+    ServiceCostItem,
+    RepairCostItem,
+    EquipmentCheckIn,
+    AuditLog,
+)
 import os
 
 # Ensure instance directory exists

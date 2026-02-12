@@ -1,0 +1,23 @@
+﻿{% extends "base.html" %}
+{% block title %}Equipment Check-in - {{ equipment.code }}{% endblock %}
+{% block content %}
+<section class="centered">
+    <div class="panel" data-reveal>
+        <h2>Equipment Check-in</h2>
+        <p class="muted">{{ equipment.make }} {{ equipment.model }} - {{ equipment.type }}</p>
+        <form method="POST" class="form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <label>
+                Current mileage
+                <input type="number" name="mileage" min="0">
+            </label>
+            <label>
+                Issues noticed
+                <textarea name="issues" rows="3" placeholder="Note anything that needs attention."></textarea>
+            </label>
+            <button type="submit" class="button primary full">Submit check-in</button>
+        </form>
+        <p class="helper">Thanks for keeping the fleet updated.</p>
+    </div>
+</section>
+{% endblock %}

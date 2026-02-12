@@ -8,6 +8,7 @@ class AdminUser(db.Model):
     email: Mapped[str] = mapped_column(unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(nullable=False)
     address: Mapped[str] = mapped_column(nullable=True)
+    role: Mapped[str] = mapped_column(nullable=False, default="admin")
     registration_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
 
 class Equipment(db.Model):
@@ -18,6 +19,7 @@ class Equipment(db.Model):
     code: Mapped[str] = mapped_column(nullable=False)
     make: Mapped[str] = mapped_column(nullable=False)
     model: Mapped[str] = mapped_column(nullable=False)
+    qr_token: Mapped[str] = mapped_column(unique=True, nullable=True)
     mileage: Mapped[int] = mapped_column(nullable=True)
     service_required: Mapped[str] = mapped_column(nullable=True)
     last_service_date: Mapped[date] = mapped_column(Date, nullable=True)
@@ -54,6 +56,48 @@ class Repair_records(db.Model):
     detail: Mapped[str] = mapped_column(nullable=True)
     cost: Mapped[float] = mapped_column(nullable=True)
     comments: Mapped[str] = mapped_column(nullable=True)
+
+class ServiceCostItem(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
+    service_id: Mapped[int] = mapped_column(ForeignKey("service.id"), nullable=False)
+    description: Mapped[str] = mapped_column(nullable=False)
+    amount: Mapped[float] = mapped_column(nullable=False)
+
+class RepairCostItem(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
+    repair_id: Mapped[int] = mapped_column(ForeignKey("repair.id"), nullable=False)
+    description: Mapped[str] = mapped_column(nullable=False)
+    amount: Mapped[float] = mapped_column(nullable=False)
+
+class ServiceAttachment(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
+    service_id: Mapped[int] = mapped_column(ForeignKey("service.id"), nullable=False)
+    original_name: Mapped[str] = mapped_column(nullable=False)
+    stored_name: Mapped[str] = mapped_column(nullable=False)
+    uploaded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+
+class RepairAttachment(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
+    repair_id: Mapped[int] = mapped_column(ForeignKey("repair.id"), nullable=False)
+    original_name: Mapped[str] = mapped_column(nullable=False)
+    stored_name: Mapped[str] = mapped_column(nullable=False)
+    uploaded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+
+class EquipmentCheckIn(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
+    equipment_id: Mapped[int] = mapped_column(ForeignKey("equipment.id"), nullable=False)
+    mileage: Mapped[int] = mapped_column(nullable=True)
+    issues: Mapped[str] = mapped_column(nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+
+class AuditLog(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
+    user_id: Mapped[int] = mapped_column(ForeignKey("admin_user.id"), nullable=True)
+    action: Mapped[str] = mapped_column(nullable=False)
+    entity: Mapped[str] = mapped_column(nullable=False)
+    entity_id: Mapped[int] = mapped_column(nullable=True)
+    details: Mapped[str] = mapped_column(nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
 
 
 

@@ -6,6 +6,7 @@
         <h2>Create your admin account</h2>
         <p class="muted">Use a work email so your team can find you easily.</p>
         <form method="POST" class="form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <label>
                 Email
                 <input type="email" name="email" required>

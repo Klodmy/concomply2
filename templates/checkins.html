@@ -1,0 +1,45 @@
+﻿{% extends "base.html" %}
+{% block title %}Check-ins - {{ equipment.code }}{% endblock %}
+{% block content %}
+<section class="panel" data-reveal>
+    <div class="panel-header">
+        <div>
+            <h2>Check-ins - {{ equipment.code }}</h2>
+            <p class="muted">Scan the QR code to submit a quick mileage and issue update.</p>
+        </div>
+        <a class="button ghost" href="{{ url_for('equipment_qr', equipment_id=equipment.id) }}">Download QR</a>
+    </div>
+
+    <div class="qr-block">
+        <img src="{{ url_for('equipment_qr', equipment_id=equipment.id) }}" alt="QR code for {{ equipment.code }}">
+    </div>
+
+    {% if checkins %}
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Mileage</th>
+                        <th>Issues</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for checkin in checkins %}
+                        <tr>
+                            <td>{{ checkin.created_at.date() }}</td>
+                            <td>{{ checkin.mileage if checkin.mileage else 'N/A' }}</td>
+                            <td>{{ checkin.issues if checkin.issues else 'No issues reported' }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h3>No check-ins yet</h3>
+            <p>Share the QR code inside the cab to start collecting updates.</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

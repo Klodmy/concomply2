@@ -1,0 +1,65 @@
+﻿{% extends "base.html" %}
+{% block title %}Team - ConComply{% endblock %}
+{% block content %}
+<section class="split">
+    <div class="panel" data-reveal>
+        <h2>Add team member</h2>
+        <p class="muted">Create admin or tech accounts for your crew.</p>
+        <form method="POST" class="form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <label>
+                Email
+                <input type="email" name="email" required>
+            </label>
+            <label>
+                Temporary Password
+                <input type="password" name="password" required>
+            </label>
+            <label>
+                Role
+                <select name="role">
+                    <option value="tech">Tech</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </label>
+            <button type="submit" class="button primary full">Add Member</button>
+        </form>
+    </div>
+
+    <div class="panel wide" data-reveal>
+        <div class="panel-header">
+            <div>
+                <h2>Team roster</h2>
+                <p class="muted">Manage who can access equipment and maintenance logs.</p>
+            </div>
+        </div>
+        {% if team_members %}
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Joined</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for member in team_members %}
+                            <tr>
+                                <td>{{ member.email }}</td>
+                                <td>{{ member.role|capitalize }}</td>
+                                <td>{{ member.registration_date.date() }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <h3>No team members yet</h3>
+                <p>Add the first technician to start logging work.</p>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Home · ConComply{% endblock %}
+{% block content %}
+<section class="hero" data-reveal>
+    <div class="hero-panel">
+        <h1>Keep heavy equipment compliant, reliable, and ready.</h1>
+        <p class="muted">ConComply turns service and repair history into a clean, crew-ready logbook. Track every unit, schedule service, and export reports in seconds.</p>
+        <div class="hero-actions">
+            {% if session.get("user_id") %}
+                <a class="button primary" href="{{ url_for('dashboard') }}">Go to Dashboard</a>
+                <a class="button ghost" href="{{ url_for('add_equipment') }}">Add Equipment</a>
+            {% else %}
+                <a class="button primary" href="{{ url_for('registration') }}">Create Account</a>
+                <a class="button ghost" href="{{ url_for('login') }}">Log In</a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card-grid">
+        <div class="card">
+            <h3>Unified equipment list</h3>
+            <p class="muted">Capture VIN, make, model, and service intervals for every asset in one searchable view.</p>
+        </div>
+        <div class="card">
+            <h3>Service + repair history</h3>
+            <p class="muted">Log inspections, repairs, and costs so your crew knows what happened last and what is next.</p>
+        </div>
+        <div class="card">
+            <h3>Instant CSV reports</h3>
+            <p class="muted">Export a compliance-ready history for each machine when regulators or clients ask.</p>
+        </div>
+    </div>
+</section>
+
+<section class="card-grid" data-reveal>
+    <div class="stat-card">
+        <div class="stat-label">Step 1</div>
+        <div class="stat-value">Add</div>
+        <p class="muted">Register equipment with VIN, make, model, and service requirements.</p>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Step 2</div>
+        <div class="stat-value">Record</div>
+        <p class="muted">Capture service and repair entries with dates, mileage, and costs.</p>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Step 3</div>
+        <div class="stat-value">Export</div>
+        <p class="muted">Download CSV reports for audits, handoffs, or customer updates.</p>
+    </div>
+</section>
+{% endblock %}
