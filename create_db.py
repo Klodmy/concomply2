@@ -10,6 +10,7 @@ from models import (
     RepairCostItem,
     EquipmentCheckIn,
     AuditLog,
+    BidTrackerEntry,
 )
 import os
 

@@ -24,6 +24,7 @@ from models import (
     RepairCostItem,
     EquipmentCheckIn,
     AuditLog,
+    BidTrackerEntry,
 )
 from utils import hash_password, verify_password
 
@@ -135,6 +136,31 @@ def parse_cost_items(descriptions, amounts):
         items.append((desc, value))
         total += value
     return items, total
+
+def parse_optional_int(value, field_name, row_index):
+    if value is None or value == "":
+        return None
+    try:
+        return int(value)
+    except ValueError as exc:
+        raise ValueError(f"Row {row_index}: {field_name} must be a whole number.") from exc
+
+def parse_optional_float(value, field_name, row_index):
+    if value is None or value == "":
+        return None
+    try:
+        return float(value)
+    except ValueError as exc:
+        raise ValueError(f"Row {row_index}: {field_name} must be a number.") from exc
+
+def validate_choice(value, allowed_values, field_name, row_index=None):
+    if value is None or value == "":
+        return None
+    if value not in allowed_values:
+        prefix = f"Row {row_index}: " if row_index else ""
+        allowed_text = ", ".join(allowed_values)
+        raise ValueError(f"{prefix}{field_name} must be one of: {allowed_text}.")
+    return value
 
 def log_action(user, action, entity, entity_id=None, details=None):
     entry = AuditLog(
@@ -281,6 +307,154 @@ def team(user):
     db.session.commit()
     flash("Team member created.", "success")
     return redirect(url_for("team"))
+
+@app.route("/bid-tracker", methods=["GET", "POST"])
+@login_required
+def bid_tracker(user):
+    allowed_roles = ("GC", "SUB", "PQ")
+    allowed_types = ("Municipal", "ICI/Private", "Subdivision", "MTO")
+    allowed_statuses = ("Submitted", "No Bid")
+
+    if request.method == "GET":
+        entries = (
+            BidTrackerEntry.query
+            .filter_by(admin_user_id=user.id)
+            .order_by(BidTrackerEntry.created_at.desc())
+            .all()
+        )
+        return render_template("bid_tracker.html", entries=entries)
+
+    fields = {
+        "line_number": request.form.getlist("line_number"),
+        "owner": request.form.getlist("owner"),
+        "project_number": request.form.getlist("project_number"),
+        "project_name": request.form.getlist("project_name"),
+        "location": request.form.getlist("location"),
+        "city": request.form.getlist("city"),
+        "closing_date": request.form.getlist("closing_date"),
+        "closing_time": request.form.getlist("closing_time"),
+        "role": request.form.getlist("role"),
+        "asphalt_tonnage": request.form.getlist("asphalt_tonnage"),
+        "bid_type": request.form.getlist("bid_type"),
+        "estimator_responsible": request.form.getlist("estimator_responsible"),
+        "submission_status": request.form.getlist("submission_status"),
+        "notes_comments": request.form.getlist("notes_comments"),
+        "follow_up_notes": request.form.getlist("follow_up_notes"),
+        "gc_awarded": request.form.getlist("gc_awarded"),
+        "amount_award": request.form.getlist("amount_award"),
+    }
+    row_count = max((len(values) for values in fields.values()), default=0)
+    created = 0
+
+    try:
+        for index in range(row_count):
+            row_values = {key: (values[index] if index < len(values) else "") for key, values in fields.items()}
+            if not any(value.strip() for value in row_values.values() if isinstance(value, str)):
+                continue
+
+            row_index = index + 1
+            closing_date = (
+                datetime.strptime(row_values["closing_date"], "%Y-%m-%d").date()
+                if row_values["closing_date"]
+                else None
+            )
+            closing_time = (
+                datetime.strptime(row_values["closing_time"], "%H:%M").time()
+                if row_values["closing_time"]
+                else None
+            )
+            entry = BidTrackerEntry(
+                admin_user_id=user.id,
+                line_number=parse_optional_int(row_values["line_number"], "No.", row_index),
+                owner=row_values["owner"].strip() or None,
+                project_number=row_values["project_number"].strip() or None,
+                project_name=row_values["project_name"].strip() or None,
+                location=row_values["location"].strip() or None,
+                city=row_values["city"].strip() or None,
+                closing_date=closing_date,
+                closing_time=closing_time,
+                role=validate_choice(row_values["role"].strip(), allowed_roles, "Role", row_index),
+                asphalt_tonnage=parse_optional_float(row_values["asphalt_tonnage"], "Asphalt Tonnage", row_index),
+                bid_type=validate_choice(row_values["bid_type"].strip(), allowed_types, "Type", row_index),
+                estimator_responsible=row_values["estimator_responsible"].strip() or None,
+                submission_status=validate_choice(row_values["submission_status"].strip(), allowed_statuses, "Bid Status", row_index),
+                notes_comments=row_values["notes_comments"].strip() or None,
+                follow_up_notes=row_values["follow_up_notes"].strip() or None,
+                gc_awarded=row_values["gc_awarded"].strip() or None,
+                amount_award=parse_optional_float(row_values["amount_award"], "Amount of Award", row_index),
+            )
+            db.session.add(entry)
+            created += 1
+
+        if created == 0:
+            flash("No rows were added. Fill out at least one field.", "error")
+            return redirect(url_for("bid_tracker"))
+
+        log_action(user, "create", "bid_tracker_entry", details=f"rows={created}")
+        db.session.commit()
+        flash(f"{created} row(s) added to the bid tracker.", "success")
+        return redirect(url_for("bid_tracker"))
+    except ValueError as exc:
+        db.session.rollback()
+        flash(str(exc), "error")
+        return redirect(url_for("bid_tracker"))
+    except Exception:
+        db.session.rollback()
+        app.logger.exception("Error saving bid tracker entries")
+        flash("Error saving bid tracker entries. Please try again.", "error")
+        return redirect(url_for("bid_tracker"))
+
+@app.route("/bid-tracker/<int:entry_id>/update", methods=["POST"])
+@login_required
+def update_bid_tracker_entry(user, entry_id):
+    allowed_roles = ("GC", "SUB", "PQ")
+    allowed_types = ("Municipal", "ICI/Private", "Subdivision", "MTO")
+    allowed_statuses = ("Submitted", "No Bid")
+
+    entry = BidTrackerEntry.query.filter_by(id=entry_id, admin_user_id=user.id).first()
+    if not entry:
+        flash("Bid tracker entry not found.", "error")
+        return redirect(url_for("bid_tracker"))
+
+    try:
+        closing_date_raw = request.form.get("closing_date")
+        closing_time_raw = request.form.get("closing_time")
+        entry.line_number = parse_optional_int(request.form.get("line_number"), "No.", 1)
+        entry.owner = (request.form.get("owner") or "").strip() or None
+        entry.project_number = (request.form.get("project_number") or "").strip() or None
+        entry.project_name = (request.form.get("project_name") or "").strip() or None
+        entry.location = (request.form.get("location") or "").strip() or None
+        entry.city = (request.form.get("city") or "").strip() or None
+        entry.closing_date = (
+            datetime.strptime(closing_date_raw, "%Y-%m-%d").date()
+            if closing_date_raw
+            else None
+        )
+        entry.closing_time = (
+            datetime.strptime(closing_time_raw, "%H:%M").time()
+            if closing_time_raw
+            else None
+        )
+        entry.role = validate_choice((request.form.get("role") or "").strip(), allowed_roles, "Role")
+        entry.asphalt_tonnage = parse_optional_float(request.form.get("asphalt_tonnage"), "Asphalt Tonnage", 1)
+        entry.bid_type = validate_choice((request.form.get("bid_type") or "").strip(), allowed_types, "Type")
+        entry.estimator_responsible = (request.form.get("estimator_responsible") or "").strip() or None
+        entry.submission_status = validate_choice((request.form.get("submission_status") or "").strip(), allowed_statuses, "Bid Status")
+        entry.notes_comments = (request.form.get("notes_comments") or "").strip() or None
+        entry.follow_up_notes = (request.form.get("follow_up_notes") or "").strip() or None
+        entry.gc_awarded = (request.form.get("gc_awarded") or "").strip() or None
+        entry.amount_award = parse_optional_float(request.form.get("amount_award"), "Amount of Award", 1)
+        log_action(user, "update", "bid_tracker_entry", entry.id)
+        db.session.commit()
+        flash("Bid tracker entry updated.", "success")
+    except ValueError as exc:
+        db.session.rollback()
+        flash(str(exc), "error")
+    except Exception:
+        db.session.rollback()
+        app.logger.exception("Error updating bid tracker entry")
+        flash("Error updating bid tracker entry. Please try again.", "error")
+    return redirect(url_for("bid_tracker"))
 
 @app.route("/add_equipment", methods=["GET", "POST"])
 @login_required

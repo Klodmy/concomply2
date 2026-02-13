@@ -22,6 +22,7 @@
             {% if session.get("user_id") %}
                 <a href="{{ url_for('dashboard') }}">Dashboard</a>
                 <a href="{{ url_for('add_equipment') }}">Equipment</a>
+                <a href="{{ url_for('bid_tracker') }}">Bid Tracker</a>
                 {% if current_user and current_user.role == "admin" %}
                     <a href="{{ url_for('team') }}">Team</a>
                 {% endif %}

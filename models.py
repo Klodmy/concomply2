@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import DateTime, ForeignKey, Date
-from datetime import datetime, date
+from sqlalchemy import DateTime, ForeignKey, Date, Time
+from datetime import datetime, date, time
 from db import db
 
 class AdminUser(db.Model):
@@ -97,6 +97,28 @@ class AuditLog(db.Model):
     entity: Mapped[str] = mapped_column(nullable=False)
     entity_id: Mapped[int] = mapped_column(nullable=True)
     details: Mapped[str] = mapped_column(nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+
+class BidTrackerEntry(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
+    admin_user_id: Mapped[int] = mapped_column(ForeignKey("admin_user.id"), nullable=False)
+    line_number: Mapped[int] = mapped_column(nullable=True)
+    owner: Mapped[str] = mapped_column(nullable=True)
+    project_number: Mapped[str] = mapped_column(nullable=True)
+    project_name: Mapped[str] = mapped_column(nullable=True)
+    location: Mapped[str] = mapped_column(nullable=True)
+    city: Mapped[str] = mapped_column(nullable=True)
+    closing_date: Mapped[date] = mapped_column(Date, nullable=True)
+    closing_time: Mapped[time] = mapped_column(Time, nullable=True)
+    role: Mapped[str] = mapped_column(nullable=True)
+    asphalt_tonnage: Mapped[float] = mapped_column(nullable=True)
+    bid_type: Mapped[str] = mapped_column(nullable=True)
+    estimator_responsible: Mapped[str] = mapped_column(nullable=True)
+    submission_status: Mapped[str] = mapped_column(nullable=True)
+    notes_comments: Mapped[str] = mapped_column(nullable=True)
+    follow_up_notes: Mapped[str] = mapped_column(nullable=True)
+    gc_awarded: Mapped[str] = mapped_column(nullable=True)
+    amount_award: Mapped[float] = mapped_column(nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
 
 

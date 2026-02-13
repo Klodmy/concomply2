@@ -193,6 +193,11 @@ p {
     width: 100%;
 }
 
+.button.small {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+}
+
 .split {
     display: grid;
     gap: 24px;
@@ -281,6 +286,30 @@ p {
     width: 100%;
     overflow-x: auto;
     margin-top: 16px;
+}
+
+.table-input {
+    width: 100%;
+    min-width: 140px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    background: #fffdfb;
+}
+
+.bid-table th,
+.bid-table td {
+    vertical-align: middle;
+}
+
+.status-submitted {
+    background: rgba(46, 125, 50, 0.12);
+}
+
+.status-no-bid {
+    background: rgba(195, 71, 45, 0.12);
 }
 
 table {

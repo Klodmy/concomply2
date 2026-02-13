@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}Bid Tracker | ConComply{% endblock %}
+
+{% block content %}
+<section class="detail-header">
+    <div>
+        <h1>Bid Tracker</h1>
+        <p class="muted">Rebuild the spreadsheet with structured rows you can grow over time.</p>
+    </div>
+</section>
+
+<div class="panel wide" data-reveal>
+    <div class="panel-header">
+        <h2>Add Bid Rows</h2>
+        <div class="actions">
+            <button class="button ghost" type="button" data-add-bid-row>Add row</button>
+            <button class="button primary" type="submit" form="bid-tracker-form">Save rows</button>
+        </div>
+    </div>
+    <form class="form" id="bid-tracker-form" method="POST" action="{{ url_for('bid_tracker') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="table-wrap">
+            <table class="bid-table">
+                <thead>
+                    <tr>
+                        <th>No.</th>
+                        <th>Owner</th>
+                        <th>Project No.</th>
+                        <th>Project Name</th>
+                        <th>Location</th>
+                        <th>City</th>
+                        <th>Closing Date</th>
+                        <th>Closing Time</th>
+                        <th>Role</th>
+                        <th>Asphalt Tonnage</th>
+                        <th>Type</th>
+                        <th>Estimator Responsible</th>
+                        <th>Submission Status</th>
+                        <th>Notes and Comments</th>
+                        <th>Follow Up Notes for Submission</th>
+                        <th>GC Awarded</th>
+                        <th>Amount of Award</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody data-bid-rows>
+                    <tr data-bid-row>
+                        <td><input class="table-input" type="number" name="line_number" min="1"></td>
+                        <td><input class="table-input" type="text" name="owner"></td>
+                        <td><input class="table-input" type="text" name="project_number"></td>
+                        <td><input class="table-input" type="text" name="project_name"></td>
+                        <td><input class="table-input" type="text" name="location"></td>
+                        <td><input class="table-input" type="text" name="city"></td>
+                        <td><input class="table-input" type="date" name="closing_date"></td>
+                        <td><input class="table-input" type="time" name="closing_time"></td>
+                        <td>
+                            <select class="table-input" name="role">
+                                <option value=""></option>
+                                <option value="GC">GC</option>
+                                <option value="SUB">SUB</option>
+                                <option value="PQ">PQ</option>
+                            </select>
+                        </td>
+                        <td><input class="table-input" type="number" step="0.01" name="asphalt_tonnage"></td>
+                        <td>
+                            <select class="table-input" name="bid_type">
+                                <option value=""></option>
+                                <option value="Municipal">Municipal</option>
+                                <option value="ICI/Private">ICI/Private</option>
+                                <option value="Subdivision">Subdivision</option>
+                                <option value="MTO">MTO</option>
+                            </select>
+                        </td>
+                        <td><input class="table-input" type="text" name="estimator_responsible"></td>
+                        <td>
+                            <select class="table-input" name="submission_status">
+                                <option value=""></option>
+                                <option value="Submitted">Submitted</option>
+                                <option value="No Bid">No Bid</option>
+                            </select>
+                        </td>
+                        <td><input class="table-input" type="text" name="notes_comments"></td>
+                        <td><input class="table-input" type="text" name="follow_up_notes"></td>
+                        <td><input class="table-input" type="text" name="gc_awarded"></td>
+                        <td><input class="table-input" type="number" step="0.01" name="amount_award"></td>
+                        <td>
+                            <button class="button ghost small" type="button" data-remove-bid-row>Remove</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </form>
+</div>
+
+<div class="panel wide" data-reveal>
+    <div class="panel-header">
+        <h2>Current Tracker</h2>
+        <p class="muted">Most recent entries first.</p>
+    </div>
+    {% if entries %}
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>No.</th>
+                        <th>Owner</th>
+                        <th>Project No.</th>
+                        <th>Project Name</th>
+                        <th>Location</th>
+                        <th>City</th>
+                        <th>Closing Date</th>
+                        <th>Closing Time</th>
+                        <th>Role</th>
+                        <th>Asphalt Tonnage</th>
+                        <th>Type</th>
+                        <th>Estimator Responsible</th>
+                        <th>Submission Status</th>
+                        <th>Notes and Comments</th>
+                        <th>Follow Up Notes for Submission</th>
+                        <th>GC Awarded</th>
+                        <th>Amount of Award</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in entries %}
+                        <tr>
+                            <td>
+                                <input class="table-input" type="number" name="line_number" min="1" form="entry-form-{{ entry.id }}" value="{{ entry.line_number or '' }}">
+                            </td>
+                            <td>
+                                <input class="table-input" type="text" name="owner" form="entry-form-{{ entry.id }}" value="{{ entry.owner or '' }}">
+                            </td>
+                            <td>
+                                <input class="table-input" type="text" name="project_number" form="entry-form-{{ entry.id }}" value="{{ entry.project_number or '' }}">
+                            </td>
+                            <td>
+                                <input class="table-input" type="text" name="project_name" form="entry-form-{{ entry.id }}" value="{{ entry.project_name or '' }}">
+                            </td>
+                            <td>
+                                <input class="table-input" type="text" name="location" form="entry-form-{{ entry.id }}" value="{{ entry.location or '' }}">
+                            </td>
+                            <td>
+                                <input class="table-input" type="text" name="city" form="entry-form-{{ entry.id }}" value="{{ entry.city or '' }}">
+                            </td>
+                            <td>
+                                <input class="table-input" type="date" name="closing_date" form="entry-form-{{ entry.id }}" value="{{ entry.closing_date }}">
+                            </td>
+                            <td>
+                                <input class="table-input" type="time" name="closing_time" form="entry-form-{{ entry.id }}" value="{{ entry.closing_time.strftime('%H:%M') if entry.closing_time else '' }}">
+                            </td>
+                            <td>
+                                <select class="table-input" name="role" form="entry-form-{{ entry.id }}">
+                                    <option value="" {% if not entry.role %}selected{% endif %}></option>
+                                    <option value="GC" {% if entry.role == "GC" %}selected{% endif %}>GC</option>
+                                    <option value="SUB" {% if entry.role == "SUB" %}selected{% endif %}>SUB</option>
+                                    <option value="PQ" {% if entry.role == "PQ" %}selected{% endif %}>PQ</option>
+                                </select>
+                            </td>
+                            <td>
+                                <input class="table-input" type="number" step="0.01" name="asphalt_tonnage" form="entry-form-{{ entry.id }}" value="{{ entry.asphalt_tonnage or '' }}">
+                            </td>
+                            <td>
+                                <select class="table-input" name="bid_type" form="entry-form-{{ entry.id }}">
+                                    <option value="" {% if not entry.bid_type %}selected{% endif %}></option>
+                                    <option value="Municipal" {% if entry.bid_type == "Municipal" %}selected{% endif %}>Municipal</option>
+                                    <option value="ICI/Private" {% if entry.bid_type == "ICI/Private" %}selected{% endif %}>ICI/Private</option>
+                                    <option value="Subdivision" {% if entry.bid_type == "Subdivision" %}selected{% endif %}>Subdivision</option>
+                                    <option value="MTO" {% if entry.bid_type == "MTO" %}selected{% endif %}>MTO</option>
+                                </select>
+                            </td>
+                            <td>
+                                <input class="table-input" type="text" name="estimator_responsible" form="entry-form-{{ entry.id }}" value="{{ entry.estimator_responsible or '' }}">
+                            </td>
+                            <td class="{% if entry.submission_status == 'Submitted' %}status-submitted{% elif entry.submission_status == 'No Bid' %}status-no-bid{% endif %}">
+                                <select class="table-input" name="submission_status" form="entry-form-{{ entry.id }}">
+                                    <option value="" {% if not entry.submission_status %}selected{% endif %}></option>
+                                    <option value="Submitted" {% if entry.submission_status == "Submitted" %}selected{% endif %}>Submitted</option>
+                                    <option value="No Bid" {% if entry.submission_status == "No Bid" %}selected{% endif %}>No Bid</option>
+                                </select>
+                            </td>
+                            <td>
+                                <input class="table-input" type="text" name="notes_comments" form="entry-form-{{ entry.id }}" value="{{ entry.notes_comments or '' }}">
+                            </td>
+                            <td>
+                                <input class="table-input" type="text" name="follow_up_notes" form="entry-form-{{ entry.id }}" value="{{ entry.follow_up_notes or '' }}">
+                            </td>
+                            <td>
+                                <input class="table-input" type="text" name="gc_awarded" form="entry-form-{{ entry.id }}" value="{{ entry.gc_awarded or '' }}">
+                            </td>
+                            <td>
+                                <input class="table-input" type="number" step="0.01" name="amount_award" form="entry-form-{{ entry.id }}" value="{{ entry.amount_award or '' }}">
+                            </td>
+                            <td>
+                                <form id="entry-form-{{ entry.id }}" method="POST" action="{{ url_for('update_bid_tracker_entry', entry_id=entry.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                    <button class="button ghost small" type="submit">Save</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">No bid tracker rows yet.</div>
+    {% endif %}
+</div>
+{% endblock %}
