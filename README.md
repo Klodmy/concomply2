@@ -69,6 +69,15 @@ Optional variables:
 - `SMTP_TLS` (default true)
 - `REMINDER_DAYS` (default 7)
 
+## Dropbox folder creation
+- `DROPBOX_ACCESS_TOKEN` (Dropbox API access token)
+- `DROPBOX_BASE_PATH` (optional, example: `/ConComply Projects`)
+
+Folder name format:
+- `{equipment_id} - {equipment_code}`
+
+Note: All machines must be signed into the same Dropbox account or a shared folder that includes `DROPBOX_BASE_PATH` for the folder to appear in File Explorer via the Dropbox desktop app.
+
 ## Security notes
 - Passwords are hashed using Werkzeug before storage.
 - CSRF protection is enforced for all POST requests.
